@@ -36,7 +36,7 @@ public class Font {
      * @see       #getDescent()
      */
     public int getHeight() {
-        return  (int) (textMatrix.width * 1.7);
+        return  18;//(int) (textMatrix.width * 1.7);
     }
     
 
@@ -125,7 +125,7 @@ public class Font {
 	
 	public int getAscent() {
 		// TODO Auto-generated method stub
-		return 15;
+		return 14;
 	}
 
 	public void update() {
@@ -135,7 +135,7 @@ public class Font {
 
 	public int getLeading() {
 		// TODO Auto-generated method stub
-		return 2;
+		return 4;
 	}
 
 	public int getDescent() {

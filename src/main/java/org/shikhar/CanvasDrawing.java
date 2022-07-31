@@ -162,7 +162,9 @@ public class CanvasDrawing {
 		
 		window.requestAnimationFrame((time) -> {
 			this.draw();
+			gui.updateUI((int) time, false);
 		});
+		
 		//console.log("gui drawing begins");
 		gui.render();
 	}

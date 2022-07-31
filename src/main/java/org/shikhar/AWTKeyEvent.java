@@ -36,9 +36,9 @@ public class AWTKeyEvent extends InputEvent {
 
     /* Virtual key codes. */
 
-    public static final int VK_ENTER          = '\n';
-    public static final int VK_BACK_SPACE     = '\b';
-    public static final int VK_TAB            = '\t';
+    public static final int VK_ENTER          = 0x0d;
+    public static final int VK_BACK_SPACE     = 0x08;//'\b';
+    public static final int VK_TAB            = 0x09;//'\t';
     public static final int VK_CANCEL         = 0x03;
     public static final int VK_CLEAR          = 0x0C;
     public static final int VK_SHIFT          = 0x10;
