@@ -4,7 +4,12 @@ package org.shikhar;
 
 import static def.dom.Globals.console;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
 import java.net.*;
 import java.util.*;
 import java.util.logging.Level;
@@ -13,7 +18,6 @@ import java.util.logging.Logger;
 import org.shikhar.Gui.CustomComponent;
 
 import def.dom.HTMLCanvasElement;
-import def.js.JSON;
 
 
 
@@ -938,6 +942,20 @@ public void onTimerTick(GuiTimer timer){
 		return (value != null) ? (Color) value : defaultcolor;
 	}
 	
+	
+	/**
+	 * Set the cursor image to a predefined cursor.
+	 * <P>
+	 *
+	 * @param cursor
+	 *            One of the constants defined by the {@link Cursor} class.
+	 *            If this parameter is <TT>null</TT> the parent cursor will
+	 *            be inherited
+	 */
+	public void setCursor(String cursor) {
+		this.awtComponent.style.cursor=(cursor);
+	}
+
 	// setDesktopProperty+
 
 	/**
@@ -2625,7 +2643,7 @@ public void onTimerTick(GuiTimer timer){
 				(clipx > bounds.x + bounds.width) ||
 				(clipy + clipheight < bounds.y) ||
 				(clipy > bounds.y + bounds.height)) {
-			console.log("bounds for "+classname+ "out of clip "+bounds );
+			//console.log("bounds for "+classname+ "out of clip "+bounds );
 			
 			return;
 		}
@@ -3219,10 +3237,11 @@ public void onTimerTick(GuiTimer timer){
 					!placement, false, placement, false, true);
 		}else if (":popup" == classname) {
 			//repaintNeeded=true;
-			c_shadow.a=0.3f;
+			g.setAlpha(0.3f);
 			g.setColor(c_shadow);//,0.3f);
 			g.fillRect(2,2,bounds.width, bounds.height);
-			paintRect(0, 0, bounds.width+1, bounds.height,
+			g.setAlpha(1);
+			paintRect(0, 0, bounds.width, bounds.height,
 				c_border, c_menu_bg, true, true, true, true, true);
 			
 			//g.setColor(c_focus,.);
@@ -3296,10 +3315,10 @@ public void onTimerTick(GuiTimer timer){
 				}
 			}
 			if(leftShadowDrawn) {
-				c_shadow.a=0.1f;
+				g.setAlpha(0.3f);
 				g.setColor(c_shadow);//,0.10f);
-				g.fillRect(2,1,9*margin_1+block, bounds.height-1);
-				c_shadow.a=0.8f;
+				g.fillRect(2,1,6*margin_1+block, bounds.height-1);
+				g.setAlpha(1);
 			}
 		}else if ("bean" == classname) {
 			//if(g.clipRect(0, 0, bounds.width, bounds.height)){
@@ -4211,22 +4230,25 @@ public void onTimerTick(GuiTimer timer){
 		//if(org.shikhar.simphy.Simphy.DEBUG )System.out.println(e+"");
 		boolean consumed=false;
 		boolean isPopUpActive=popupowner!=null;
+		
 		/*
 		if(button==0 && id==AWTMouseEvent.MOUSE_DRAGGED) {
 			id=AWTMouseEvent.MOUSE_MOVED;
 		}
 		*/
+
 		if ((id == AWTMouseEvent.MOUSE_ENTERED || (id == AWTMouseEvent.MOUSE_MOVED))
 				|| (id == AWTMouseEvent.MOUSE_EXITED)
 				|| (id == AWTMouseEvent.MOUSE_PRESSED)
 				|| (id == AWTMouseEvent.MOUSE_DRAGGED)
 				|| (id == AWTMouseEvent.MOUSE_RELEASED)||(id == AWTMouseEvent.MOUSE_CLICKED)) {
-			boolean controldown=(modifiers & (InputEvent.CTRL_MASK|InputEvent.META_MASK)) != 0;
-			boolean shiftdown=(modifiers & InputEvent.SHIFT_MASK) != 0;
+			boolean controldown=(modifiers & (AWTKeyEvent.CTRL_MASK|AWTKeyEvent.META_MASK)) != 0;
+			boolean shiftdown=(modifiers & AWTKeyEvent.SHIFT_MASK) != 0;
 			boolean popuptrigger=((button==AWTMouseEvent.BUTTON3) && (id==AWTMouseEvent.MOUSE_CLICKED ||id==AWTMouseEvent.MOUSE_RELEASED));
 			if (id == AWTMouseEvent.MOUSE_ENTERED) {
 				if (mousepressed == null) {
 					findComponent(content, x, y);
+					
 					handleMouseEvent(x, y,button, clickcount, shiftdown, controldown,
 							popuptrigger, AWTMouseEvent.MOUSE_ENTERED,
 							mouseinside, insidepart);
@@ -4236,7 +4258,6 @@ public void onTimerTick(GuiTimer timer){
 				Object previnside = mouseinside;
 				Object prevpart = insidepart;
 				findComponent(content, x, y);
-				//if(org.shikhar.simphy.Simphy.DEBUG )System.out.println(" mousemoved= "+getClass(mouseinside));
 
 				if ((previnside == mouseinside) && (prevpart == insidepart)) {
 					handleMouseEvent(x, y,button, clickcount, shiftdown, controldown,
@@ -4280,7 +4301,7 @@ public void onTimerTick(GuiTimer timer){
 
 				}
 				hideTip(); // remove tooltip
-				//System.out.println("Press: Mousepressed= "+getClass(mouseinside)+" btn ="+button);
+				//console.log("Press: Mousepressed= "+getComponentClass(mouseinside)+" btn ="+button);
 				mousepressed = mouseinside;
 				pressedpart = insidepart;
 				if(mousepressed!=null && mousepressed!=content){
@@ -4457,18 +4478,16 @@ public void onTimerTick(GuiTimer timer){
 		return false;
 	}
 	
-	public boolean handleKey(int id, int keycode, String keycharS, int modifiers,
+	public boolean handleKey(int id, int keycode, int keychar, int modifiers,
 			boolean actionkey) {
 		if ((popupowner == null) && (focusowner == null)) return false;
 		boolean consumed = false;
 
-		boolean controldown =  (modifiers & (InputEvent.CTRL_MASK|InputEvent.META_MASK)) != 0;
-		boolean shiftdown =  (modifiers & InputEvent.SHIFT_MASK) != 0;
-		boolean altdown =  (modifiers & InputEvent.ALT_MASK) != 0;
+		boolean controldown = (modifiers & (AWTKeyEvent.CTRL_MASK|AWTKeyEvent.META_MASK)) != 0;
+		boolean shiftdown = (modifiers & AWTKeyEvent.SHIFT_MASK) != 0;
+		boolean altdown = (modifiers & AWTKeyEvent.ALT_MASK) != 0;
 
 		hideTip(); // remove tooltip
-		
-		int keychar=keycharS.length()!=1?0:keycharS.charAt(0);
 		boolean control = (keychar <= 0x1f)
 				|| ((keychar >= 0x7f) && (keychar <= 0x9f))
 				|| (keychar >= 0xffff) || controldown;
@@ -5183,7 +5202,7 @@ public void onTimerTick(GuiTimer timer){
 			updateDrawStyle(component ,min,-Math.abs(movestart-moveend)+insert.length());
 			movestart = moveend = min + insert.length();
 			/*
-			if(getClass(component)=="spinbox"){
+			if(getComponentClass(component)=="spinbox"){
 				try{
 					double v=Double.parseDouble(text);
 					double minimum = getDouble(component, "minimum");
@@ -5688,13 +5707,13 @@ public void onTimerTick(GuiTimer timer){
 					} else if (id == AWTMouseEvent.MOUSE_RELEASED)
 						set(header, ":resizing", null);
 					else if (id == AWTMouseEvent.MOUSE_ENTERED)
-						awtComponent.style.cursor=(Cursor
+						setCursor(Cursor
 								.getPredefinedCursor(Cursor.E_RESIZE_CURSOR));
 				}
 			}
 			if (header != null && get(header, ":resizecomponent") == null) {
 				set(header, ":resizing", null);
-				awtComponent.style.cursor=(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+				setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			}
 			if (header != null && get(header, "action") != null) {
 				if (insidepart != null && insidepart instanceof Object[]
@@ -5792,9 +5811,9 @@ public void onTimerTick(GuiTimer timer){
 			/*
 			int modifiers = 0;
 			if (shiftdown)
-				modifiers |= InputEvent.SHIFT_MASK;
+				modifiers |= AWTKeyEvent.SHIFT_MASK;
 			if (controldown)
-				modifiers |= InputEvent.CTRL_MASK;
+				modifiers |= AWTKeyEvent.CTRL_MASK;
 			if (id == AWTMouseEvent.MOUSE_PRESSED
 					|| id == AWTMouseEvent.MOUSE_RELEASED
 					|| id == AWTMouseEvent.MOUSE_EXITED
@@ -5840,7 +5859,7 @@ public void onTimerTick(GuiTimer timer){
 						&& ((mousepressed == null) || (mousepressed == component))
 						&& ((id == AWTMouseEvent.MOUSE_ENTERED) || (id == AWTMouseEvent.MOUSE_EXITED))
 						&& (get(component, "type") == "link")) {
-					awtComponent.style.cursor=(Cursor
+					setCursor(Cursor
 							.getPredefinedCursor((id == AWTMouseEvent.MOUSE_ENTERED) ? Cursor.HAND_CURSOR
 									: Cursor.DEFAULT_CURSOR));
 				} else if ((id == AWTMouseEvent.MOUSE_RELEASED ||id == AWTMouseEvent.MOUSE_CLICKED  && button==AWTMouseEvent.BUTTON1)
@@ -5893,7 +5912,7 @@ public void onTimerTick(GuiTimer timer){
 				}
 			}
 		} else if (":combolist" == classname) {
-			if (!processScroll(x, y, id, component, part,false)) {
+			if (!processScroll(x, y, id, component, part,false)) {//input.mouse.activeFingerCount>0)) {
 				if ((id == AWTMouseEvent.MOUSE_ENTERED) || (id == DRAG_ENTERED)) {
 					if (part != null) { // + scroll if dragged
 						setInside(component, part, false);
@@ -5922,21 +5941,22 @@ public void onTimerTick(GuiTimer timer){
 		} else if ("textarea" == classname) {
 			if(clickcount>0){
 				//if(org.shikhar.simphy.Simphy.DEBUG )System.out.println("click count="+clickcount);
-				//processField(x, y, clickcount, id, component, true, false, 0);
+			   processField(x, y, clickcount, id, component, true, false, 0);
 			}
 
-			//if (!processScroll(x, y, id, component, part,input.mouse.activeFingerCount>0)) {
-			//	if(input.mouse.activeFingerCount==0)processField(x, y, clickcount, id, component, true, false, 0);
-			//}
+			if (!processScroll(x, y, id, component, part,false)) {//input.mouse.activeFingerCount>0)) {
+				//if(input.mouse.activeFingerCount==0)
+					processField(x, y, clickcount, id, component, true, false, 0);
+			}
 		} else if ("panel" == classname) {
-			//if (id == AWTMouseEvent.MOUSE_PRESSED) setFocus(component);
+			if (id == AWTMouseEvent.MOUSE_PRESSED) setFocus(component);
 			//processScroll(x, y, id, component, part,input.mouse.activeFingerCount>0);
 		} else if ("desktop" == classname) {
 			if (part == "modal") {
 				if (id == AWTMouseEvent.MOUSE_ENTERED) {
-					awtComponent.style.cursor=(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+					setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				} else if (id == AWTMouseEvent.MOUSE_EXITED) {
-					awtComponent.style.cursor=(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+					setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				}
 			
 			}
@@ -6040,12 +6060,12 @@ public void onTimerTick(GuiTimer timer){
 					&& (mousepressed == null)) {
 				boolean horizontal = ("vertical" != get(component,
 						"orientation"));
-				awtComponent.style.cursor=(Cursor
+				setCursor(Cursor
 						.getPredefinedCursor(horizontal ? Cursor.E_RESIZE_CURSOR
 								: Cursor.S_RESIZE_CURSOR));
 			} else if (((id == AWTMouseEvent.MOUSE_EXITED) && (mousepressed == null))
 					|| ((id == AWTMouseEvent.MOUSE_RELEASED) && (mouseinside != component))) {
-				awtComponent.style.cursor=(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+				setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			}
 		} else if ("menubar" == classname) {
 			Object selected = get(component, "selected");
@@ -6299,7 +6319,7 @@ public void onTimerTick(GuiTimer timer){
 					doLayout(component);
 					repaint(component);
 				} else if (id == AWTMouseEvent.MOUSE_ENTERED) {
-					awtComponent.style.cursor=(Cursor
+					setCursor(Cursor
 							.getPredefinedCursor((part == ":n") ? Cursor.N_RESIZE_CURSOR
 									: (part == ":ne") ? Cursor.NE_RESIZE_CURSOR
 											: (part == ":e") ? Cursor.E_RESIZE_CURSOR
@@ -6309,7 +6329,7 @@ public void onTimerTick(GuiTimer timer){
 																			: (part == ":w") ? Cursor.W_RESIZE_CURSOR
 																					: Cursor.NW_RESIZE_CURSOR));
 				} else if (id == AWTMouseEvent.MOUSE_EXITED) {
-					awtComponent.style.cursor=(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+					setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				}
 			}
 		}
@@ -6472,10 +6492,10 @@ public void onTimerTick(GuiTimer timer){
 				validate(component); // caret check only
 			}
 		} else if ((id == AWTMouseEvent.MOUSE_ENTERED) && (mousepressed == null)) {
-			awtComponent.style.cursor=(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
+			setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
 		} else if (((id == AWTMouseEvent.MOUSE_EXITED) && (mousepressed == null))
 				|| ((id == AWTMouseEvent.MOUSE_RELEASED) && ((mouseinside != component) || (insidepart != null)))) {
-			awtComponent.style.cursor=(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		}
 	}
 
@@ -6876,7 +6896,7 @@ public void onTimerTick(GuiTimer timer){
 			if ("dialog" == classname) {
 				int titleheight = getInteger(component, ":titleheight", 0);
 				boolean resizable = getBoolean(component, "resizable", false)&& get(component, ":minimized")==null;
-				int margin=4;
+				int margin=4;//(int) (4*RenderUtilities.PIXEL_SCALE_FACTOR);
 				if (resizable && (x < margin)) {
 					insidepart = (y < block) ? ":nw" : (y >= bounds.height
 							- block) ? ":sw" : ":w";
@@ -7101,6 +7121,7 @@ public void onTimerTick(GuiTimer timer){
 		}
 	}
 
+
 	/**
 	 *
 	 */
@@ -7275,7 +7296,7 @@ public void onTimerTick(GuiTimer timer){
 		}
 		if (!focusinside) { // request focus for the thinlet component
 			if(awtComponent!=null){
-				//awtComponent.requestFocus();
+				awtComponent.focus();
 				focusinside = true;
 			}
 		}
@@ -7688,7 +7709,7 @@ public void onTimerTick(GuiTimer timer){
 			
 			if(i>100){
 				//may stuck in loop if same itemis added twice to same parent
-				//if(org.shikhar.simphy.Simphy.DEBUG )System.out.println("stuck in loop in gui.getItemCountImpl"+Gui.getClass(component));
+				//if(org.shikhar.simphy.Simphy.DEBUG )System.out.println("stuck in loop in gui.getItemCountImpl"+Gui.getComponentClass(component));
 				return 3;
 			}
 			
@@ -8770,7 +8791,7 @@ public void onTimerTick(GuiTimer timer){
 
 		Object[] definition = getDefinition(getComponentClass(component), key, null);
 		if(definition==null){
-			//if(org.shikhar.simphy.Simphy.DEBUG )System.out.println("Missing definition "+key+" in class "+getClass(component));
+			//if(org.shikhar.simphy.Simphy.DEBUG )System.out.println("Missing definition "+key+" in class "+getComponentClass(component));
 			//return;
 		}
 		key = (String) definition[1];
@@ -9403,7 +9424,7 @@ public void onTimerTick(GuiTimer timer){
 				String classname = null;
 				if ("item".equals(compname)) {
 					comp = "item";
-					String parentclass = getClass(component);
+					String parentclass = getComponentClass(component);
 					if ("list" == parentclass) { classname = "item"; }
 					else if ("tree" == parentclass) { classname = "node"; }
 					else if ("table" == parentclass) { classname = "row"; }

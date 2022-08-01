@@ -83,18 +83,19 @@ public class CanvasDrawing {
 		gui.setString(dlg, "text","Text Header");
 		Object btn=Gui.create("button");
 		gui.setString(btn, "text","Click Me !");
+		gui.setString(btn, "tooltip","Don't try to mesh with Me!");
 		gui.setInteger(btn, "width",100);
 		gui.setInteger(btn, "height",50);
 		gui.add(dlg,btn);
 		
-		 btn=Gui.create("button");
+		btn=Gui.create("button");
 		gui.setString(btn, "text","Hello world!");
 		gui.setInteger(btn, "width",100);
 		gui.setInteger(btn, "height",50);
 		//gui.setBoolean(btn, "resizable",true);
 		
 		gui.add(dlg,btn);
-		 btn=Gui.create("slider");
+		btn=Gui.create("slider");
 			//gui.setString(btn, "text","Hello world!");
 			gui.setInteger(btn, "minimum",10);
 			gui.setInteger(btn, "maximum",50);

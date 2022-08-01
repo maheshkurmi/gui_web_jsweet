@@ -2,6 +2,8 @@ package org.shikhar;
 
 import static def.dom.Globals.console;
 import static def.dom.Globals.window;
+import static jsweet.util.StringTypes.mouseover;
+import static jsweet.util.StringTypes.mouseout;
 import static jsweet.util.StringTypes.mousedown;
 import static jsweet.util.StringTypes.mousemove;
 import static jsweet.util.StringTypes.mouseup;
@@ -11,6 +13,9 @@ import static jsweet.util.StringTypes.touchmove;
 import static jsweet.util.StringTypes.touchstart;
 import static jsweet.util.StringTypes.keydown;
 import static jsweet.util.StringTypes.keyup;
+import static jsweet.util.StringTypes.contextmenu;
+import static jsweet.util.StringTypes.click;
+import static jsweet.util.StringTypes.dblclick;
 
 import def.dom.HTMLCanvasElement;
 import def.dom.KeyboardEvent;
@@ -56,13 +61,16 @@ public class Input {
 	}
 	
 	private int getButton(MouseEvent e) {
-		switch (e.button) {
-	    case 0:
-	      return AWTMouseEvent.BUTTON1;
+		int btn=e.button;
+		if(btn==0)btn=e.which;
+		else btn++;
+		switch (btn) {
 	    case 1:
+	      return AWTMouseEvent.BUTTON1;
+	    case 2:
 	    	return AWTMouseEvent.BUTTON2;
 	      //log.textContent = 'Middle button clicked.';
-	    case 2:
+	    case 3:
 	    	return AWTMouseEvent.BUTTON3;
 	      //log.textContent = 'Right button clicked.';
 	    default:
@@ -84,6 +92,32 @@ public class Input {
 		canvas.addEventListener(mouseup, event -> {
 			Vector2 v=pageToCanvas(event.pageX,event.pageY);
 			pointerReleased((int)v.x, (int)v.y, getButton(event),(int) event.detail,getModifiers(event));
+			return null;
+		}, true);
+		canvas.addEventListener(click, event -> {
+			Vector2 v=pageToCanvas(event.pageX,event.pageY);
+			pointerClicked((int)v.x, (int)v.y, getButton(event),(int) event.detail,getModifiers(event));
+			return null;
+		}, true);
+		canvas.addEventListener(contextmenu, event -> {
+			Vector2 v=pageToCanvas(event.pageX,event.pageY);
+			pointerReleased((int)v.x, (int)v.y, AWTMouseEvent.BUTTON2,1,getModifiers(event));
+			event.stopPropagation();
+			// Stops touch from being also reported as mouse events
+	        // in desktop browsers.
+			event.preventDefault();
+			return null;
+		}, true);
+		canvas.addEventListener(mouseover, event -> {
+			Vector2 v=pageToCanvas(event.pageX,event.pageY);
+			gui.handleMouse((int)v.x, (int)v.y,  AWTMouseEvent.MOUSE_ENTERED, getButton(event),(int) event.detail, getModifiers(event));
+			gui.handleInput();
+			//pointerDragged((int)v.x, (int)v.y, getButton(event),(int) event.detail,getModifiers(event));
+			return null;
+		}, true);
+		canvas.addEventListener(mouseout, event -> {
+			Vector2 v=pageToCanvas(event.pageX,event.pageY);
+			gui.handleMouse((int)v.x, (int)v.y, AWTMouseEvent.MOUSE_EXITED, getButton(event),(int) event.detail, getModifiers(event));
 			return null;
 		}, true);
 		canvas.addEventListener(touchstart, event -> {
@@ -147,14 +181,16 @@ public class Input {
 		    });
 		   */
 		window.addEventListener(keydown, event -> {
-			keyPressed((int)  event.keyCode, event.key,getModifiers(event));
-			console.log(getModifiers(event));
+			char keychar=event.key.length()!=1?0:event.key.charAt(0);
+			keyPressed((int)  event.keyCode,keychar,getModifiers(event));
+			//console.log(getModifiers(event));
 			event.preventDefault();
 			
 			return null;
 		}, true);
 		window.addEventListener(keyup, event -> {
-			keyReleased((int)  event.keyCode, event.key,getModifiers(event));
+			char keychar=event.key.length()!=1?0:event.key.charAt(0);
+			keyReleased((int)  event.keyCode, keychar,getModifiers(event));
 			event.preventDefault();
 			return null;
 		}, true);
@@ -237,14 +273,14 @@ public class Input {
 	 * @param modifier 
 	 *
 	 */
-	protected void keyPressed(int keyCode, String keyChar, int modifiers) {
+	protected void keyPressed(int keyCode, char keyChar, int modifiers) {
 		//console.log("Key pressed" + "code=="+keyCode+" keyChar="+keyChar);
 		gui.handleKey(AWTKeyEvent.KEY_PRESSED, keyCode, keyChar, modifiers, false);
 	
 		gui.handleInput();
 	}
 
-	protected void keyReleased(int keyCode, String keyChar,int modifiers) {
+	protected void keyReleased(int keyCode, char keyChar,int modifiers) {
 		//console.log("Key pressed" + "code=="+keyCode+" keyChar="+keyChar);
 		gui.handleKey(AWTKeyEvent.KEY_RELEASED, keyCode, keyChar, modifiers, false);
 
@@ -260,7 +296,7 @@ public class Input {
 	}
 
 	protected void pointerPressed(int x, int y, int button,int clickcount,int modifiers) {
-		gui.handleMouse(x,y , AWTMouseEvent.MOUSE_PRESSED, button, 0,  modifiers);
+		gui.handleMouse(x,y , AWTMouseEvent.MOUSE_PRESSED, button, clickcount,  modifiers);
 		gui.handleInput();
 	}
 
@@ -278,6 +314,11 @@ public class Input {
 
 	protected void pointerReleased(int x, int y, int button,int clickcount,int modifiers) {
 		gui.handleMouse(x,y ,AWTMouseEvent.MOUSE_RELEASED, button, 0,modifiers);
+		gui.handleInput();
+	}
+	
+	protected void pointerClicked(int x, int y, int button,int clickcount,int modifiers) {
+		gui.handleMouse(x,y ,AWTMouseEvent.MOUSE_CLICKED, button, clickcount,modifiers);
 		gui.handleInput();
 	}
 

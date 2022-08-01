@@ -39,11 +39,16 @@ public class Color {
     		this.color= "#"+value;
     		*/
 	}
+    
 
     public Color(String cssColor) {
     	this.color=cssColor;
     }
     
+    public void setAlpha(float a) {
+    	this.a=a;
+    	this.color="rgba("+r+","+g+","+b+","+a+")";
+    }
     
 	public Color brighter() {
         if ( r == 255 && g == 255 && b == 255) {

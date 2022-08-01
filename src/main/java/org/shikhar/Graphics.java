@@ -58,6 +58,16 @@ public class Graphics {
 		;
 	}
 
+	public void setAlpha(double alpha) {
+		context.globalAlpha=alpha;
+	}
+	
+
+	public double getAlpha() {
+		return context.globalAlpha;
+	}
+	
+	
 	public Color getColor() {
 		return color;
 	}

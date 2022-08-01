@@ -2,7 +2,8 @@ package org.shikhar;
 
 public class Cursor {
 
-	public static final String HAND_CURSOR = "move";
+	public static final String HAND_CURSOR = "pointer";
+	public static final String DRAG_CURSOR = "move";
 	public static final String DEFAULT_CURSOR = "default";
 	public static final String WAIT_CURSOR = "wait";
 	public static final String E_RESIZE_CURSOR = "e-resize";

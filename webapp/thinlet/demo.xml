@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<dialog columns="1" gap="4" text="Demo XML" width="720" height="480">
+<dialog columns="1" gap="4" text="Demo XML" width="720" height="480" resizable="true">
 	<menubar weightx="1">
 		<menu text="File" mnemonic="0">
 		 <menuitem text="New" icon="icons/new.gif" mnemonic="0" />

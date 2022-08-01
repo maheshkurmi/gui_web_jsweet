@@ -71,7 +71,7 @@ public class Rectangle {
 	}
 	
 	public boolean contains(int rx, int ry) {
-		if ((this.x <= rx) && (this.x + this.width >= rx) && (this.y <= this.y) && (this.y + this.height >= ry))
+		if ((this.x <= rx) && (this.x + this.width >= rx) && (this.y <= ry) && (this.y + this.height >= ry))
 			return true;
 		return false;
 	}
