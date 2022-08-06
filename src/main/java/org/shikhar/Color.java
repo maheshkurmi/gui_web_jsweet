@@ -92,5 +92,12 @@ public class Color {
 		return c;
 	}
 
+	public static Color random() {
+		int r=(int) (Math.random()*255);
+		int g=(int) (Math.random()*255);
+		int b=(int) (Math.random()*255);
+		return new Color(r,g,b,1);
+	}
+
 	
 }

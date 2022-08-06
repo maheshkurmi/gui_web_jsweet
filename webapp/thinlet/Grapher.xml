@@ -4,9 +4,9 @@
 <splitpane name="split" divider="180" weightx="1" weighty="1">
     <panel scrollable="true" bottom="2" columns="1" gap="4" left="3" top="3" weightx="1" weighty="1" >
         <panel columns="4" gap="3" >
-            <button name="btn_pause" tooltip="play/pause graph" action="button_clicked(this)"/>
-            <button name="btn_reset" tooltip="reset graph" action="button_clicked(this)"/>
-			<button name="btn_export" tooltip="export data to csv" action="button_clicked(this)"/>
+            <button text="△" name="btn_pause" tooltip="play/pause graph" action="button_clicked(this)"/>
+            <button text="↻" name="btn_reset" tooltip="reset graph" action="button_clicked(this)"/>
+			<button text="θ" name="btn_export" tooltip="export data to csv" action="button_clicked(this)"/>
         </panel>
         <label name="lbl_obj1" text="Body1"></label>
         <combobox name="cmb_firstparam" action="combo_changed(this,this.selected)" width="100" end="7" editable="false" selected="3" start="7" text="Momentum" weightx="1" >
@@ -31,6 +31,6 @@
             <checkbox name="chk_timeaxis" selected="false" text="Force time as X axis" action="checkbox_clicked(this,this.selected)" tooltip="Check to use time as x axis and objects parameters on Y axis (ignoring units)"/>
         </panel>
     </panel>
-<panel name="pnlGraph" width="100" height="200" columns="1" top="5" bottom="3" gap="3" weightx="1" weighty="1" />
+<bean name="pnlGraph"  bean="org.shikhar.simphy.gui.CanvasBean" width="480" height="300" border="true"/>
 </splitpane>
 </dialog>

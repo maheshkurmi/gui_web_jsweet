@@ -23,20 +23,25 @@ public class Graphics {
 	public static int LEFT = 0;
 	public static int BASELINE = 0;
 	private Rectangle tmpRECT=new Rectangle(); 
+	
+	private CanvasGradient h_gradient,v_gradient;
 	public Graphics(HTMLCanvasElement canvas) {
 		// canvas = (HTMLCanvasElement) document.getElementById("canvas");
 		this.canvas = canvas;
 		PIXEL_SCALE_FACTOR = 2;
 		context = canvas.getContext(StringTypes._2d);
+	
 	}
-
-	public void begin(double width, double height) {
+	
+	
+	
+	public void begin(double width, double height, boolean clear) {
 		context.setTransform(1, 0, 0, 1, 0, 0);
 		context.scale(PIXEL_SCALE_FACTOR, PIXEL_SCALE_FACTOR);
 		context.save();
 		transX=0;
 		transY=0;
-		context.clearRect(0, 0, width, height);
+		if(clear)context.clearRect(0, 0, width, height);
 		clipRect.set(0, 0, (int)width, (int)height);
 	}
 	
@@ -257,15 +262,26 @@ public class Graphics {
 
 	public void drawHGradient(Color c1, Color c2, double x, double y, double w, double h) {
 		// TODO Auto-generated method stub
-		setColor(c1);
+		context.save();
+		h_gradient=context.createLinearGradient(x, y, x, y+h);
+		h_gradient.addColorStop(0, c1.toString());
+		h_gradient.addColorStop(1, c2.toString());
+		context.fillStyle=(Union4<String, CanvasGradient, CanvasPattern, Object>) h_gradient;
+		//setColor(c1);
 		context.fillRect(x, y, w, h);
+		context.restore();
 	}
 
 	public void drawVGradient(Color c1, Color c2, double x, int y, double w, double h) {
 		// TODO Auto-generated method stub
-		setColor(c1);
+		context.save();
+		h_gradient=context.createLinearGradient(x, y, x+w, y);
+		h_gradient.addColorStop(0, c1.toString());
+		h_gradient.addColorStop(1, c2.toString());
+		context.fillStyle=(Union4<String, CanvasGradient, CanvasPattern, Object>) h_gradient;
+		//setColor(c1);
 		context.fillRect(x, y, w, h);
-
+		context.restore();
 	}
 
 	public void drawImage(AWTImage icon, int x, int y, Color tintColor) {

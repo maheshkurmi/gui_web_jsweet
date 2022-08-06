@@ -44,7 +44,7 @@ public class CanvasDrawing {
 		int color = (int) (Math.pow(2, 8 * Math.floor(angle / Math.PI * 2) - 1));
 
 		ctx.fillStyle = union("rgb(" + (color >> 16 & 0xFF) + "," + (color >> 8 & 0xFF) + "," + (color & 0xFF) + ")");
-		console.log(ctx.fillStyle, color + "opp" + Math.floor(angle / Math.PI * 2));
+		//console.log(ctx.fillStyle, color + "opp" + Math.floor(angle / Math.PI * 2));
 
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		ctx.beginPath();

@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.jsweet</groupId>
 	<artifactId>jsweet-quickstart</artifactId>
@@ -156,15 +155,24 @@
 			<version>2.0.0</version>
 		</dependency>
 		<dependency>
-    		<groupId>org.jsweet.candies.j4ts</groupId>
-    		<artifactId>j4ts-awtgeom</artifactId>
-    		<version>1.8.132-20170726</version>
+			<groupId>org.jsweet.candies.j4ts</groupId>
+			<artifactId>j4ts-awtgeom</artifactId>
+			<version>1.8.132-20170726</version>
 		</dependency>
 		<dependency>
-    		<groupId>org.jsweet.candies.j4ts</groupId>
-    		<artifactId>j4ts-swingundo</artifactId>
-    	<version>1.8.132-20170726</version>
-</dependency>
-		
+			<groupId>org.jsweet.candies.j4ts</groupId>
+			<artifactId>j4ts-swingundo</artifactId>
+			<version>1.8.132-20170726</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jsweet.candies</groupId>
+			<artifactId>threejs</artifactId>
+			<version>75-20171101</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jsweet.candies</groupId>
+			<artifactId>stats</artifactId>
+			<version>0.17.0-20171101</version>
+		</dependency>
 	</dependencies>
 </project>

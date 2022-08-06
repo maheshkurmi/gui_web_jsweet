@@ -17,6 +17,7 @@ import static jsweet.util.StringTypes.contextmenu;
 import static jsweet.util.StringTypes.click;
 import static jsweet.util.StringTypes.dblclick;
 
+import def.dom.ClientRect;
 import def.dom.HTMLCanvasElement;
 import def.dom.KeyboardEvent;
 import def.dom.MouseEvent;
@@ -32,6 +33,8 @@ public class Input {
 	Gui gui;
 	HTMLCanvasElement canvas;
 	Vector2 TMP_VEC=new Vector2();
+	Vector2 TMP_PrevPressPoint=new Vector2();
+	int MAX_CLICK_DISTANCE=20;
 	public Input(Gui gui, HTMLCanvasElement canvas) {
 		this.gui = gui;
 		this.canvas=canvas;
@@ -39,6 +42,11 @@ public class Input {
 	}
 
 	private Vector2 pageToCanvas(double x, double y) {
+		/*
+		ClientRect bb = canvas.getBoundingClientRect();
+	    const x = Math.floor( (event.clientX - bb.left) / bb.width * canvas.width );
+	    const y = Math.floor( (event.clientY - bb.top) / bb.height * canvas.height );
+	   */
 	    return TMP_VEC.set(x - canvas.offsetLeft, y - canvas.offsetTop);
 	}
 	
@@ -49,7 +57,7 @@ public class Input {
 			if(event.altKey)modifier|=InputEvent.ALT_MASK;
 			if(event.ctrlKey||event.metaKey)modifier|=InputEvent.CTRL_MASK;
 			if(event.shiftKey)modifier|=InputEvent.SHIFT_MASK;
-			if(modifier>0)console.log(modifier);
+			//if(modifier>0)console.log(modifier);
 		}else if(e instanceof MouseEvent) {
 			MouseEvent event=(MouseEvent) e;
 			if(event.altKey)modifier|=InputEvent.ALT_MASK;
@@ -94,11 +102,13 @@ public class Input {
 			pointerReleased((int)v.x, (int)v.y, getButton(event),(int) event.detail,getModifiers(event));
 			return null;
 		}, true);
+		/*
 		canvas.addEventListener(click, event -> {
 			Vector2 v=pageToCanvas(event.pageX,event.pageY);
 			pointerClicked((int)v.x, (int)v.y, getButton(event),(int) event.detail,getModifiers(event));
 			return null;
 		}, true);
+		*/
 		canvas.addEventListener(contextmenu, event -> {
 			Vector2 v=pageToCanvas(event.pageX,event.pageY);
 			pointerReleased((int)v.x, (int)v.y, AWTMouseEvent.BUTTON2,1,getModifiers(event));
@@ -296,7 +306,8 @@ public class Input {
 	}
 
 	protected void pointerPressed(int x, int y, int button,int clickcount,int modifiers) {
-		gui.handleMouse(x,y , AWTMouseEvent.MOUSE_PRESSED, button, clickcount,  modifiers);
+		TMP_PrevPressPoint.set(x,y);
+		gui.handleMouse(x,y , AWTMouseEvent.MOUSE_PRESSED, button, 0,  modifiers);
 		gui.handleInput();
 	}
 
@@ -313,14 +324,14 @@ public class Input {
 	// dragged/released/exited
 
 	protected void pointerReleased(int x, int y, int button,int clickcount,int modifiers) {
-		gui.handleMouse(x,y ,AWTMouseEvent.MOUSE_RELEASED, button, 0,modifiers);
+		if(clickcount==0||TMP_PrevPressPoint.distance(x,y)>MAX_CLICK_DISTANCE) {
+			gui.handleMouse(x,y ,AWTMouseEvent.MOUSE_RELEASED, button, 0,modifiers);
+		}else {
+			gui.handleMouse(x,y ,AWTMouseEvent.MOUSE_CLICKED, button, clickcount,modifiers);
+		}
 		gui.handleInput();
 	}
 	
-	protected void pointerClicked(int x, int y, int button,int clickcount,int modifiers) {
-		gui.handleMouse(x,y ,AWTMouseEvent.MOUSE_CLICKED, button, clickcount,modifiers);
-		gui.handleInput();
-	}
 
 	protected void mouseScrolled(int x, int y, int scroll) {
 		gui.handleMouseWheel(x, y, scroll);

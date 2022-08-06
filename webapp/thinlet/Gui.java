@@ -955,7 +955,7 @@ public void onTimerTick(GuiTimer timer){
 		this.font = font;
 		this.g.setFont(font);
 		block = font.getHeight();
-		console.log("Gui Block="+block);
+		//console.log("Gui Block="+block);
 		/*
 		try{
 			block = font.getHeight();
@@ -2625,7 +2625,7 @@ public void onTimerTick(GuiTimer timer){
 				(clipx > bounds.x + bounds.width) ||
 				(clipy + clipheight < bounds.y) ||
 				(clipy > bounds.y + bounds.height)) {
-			console.log("bounds for "+classname+ "out of clip "+bounds );
+			//console.log("bounds for "+classname+ "out of clip "+bounds );
 			
 			return;
 		}

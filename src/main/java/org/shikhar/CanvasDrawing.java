@@ -8,8 +8,10 @@ import static jsweet.util.Lang.union;
 
 import java.io.IOException;
 
+
 import def.dom.CanvasRenderingContext2D;
 import def.dom.Element;
+import def.dom.Event;
 import def.dom.HTMLCanvasElement;
 import def.dom.XMLHttpRequest;
 import def.js.Array;
@@ -24,15 +26,17 @@ public class CanvasDrawing {
 		};
 	}
 
-	private HTMLCanvasElement canvas;
+	public static HTMLCanvasElement canvas;
 	private CanvasRenderingContext2D ctx;
 	private double angle = 0;
-	Gui gui;
+	private double prevTime=-1;
+	private static Gui gui;
+	public static HTMLCanvasElement backgroundLayer;
 	
 	public CanvasDrawing() {
 		console.info("creating canvas drawing example");
 		canvas = (HTMLCanvasElement) document.getElementById("canvas");
-
+		backgroundLayer= (HTMLCanvasElement) document.getElementById("backgroundLayer");
 		Element body = document.querySelector("body");
 		double size = Math.min(body.clientHeight, body.clientWidth);
 		canvas.width = 2*body.clientWidth ;
@@ -43,10 +47,18 @@ public class CanvasDrawing {
 		canvas.style.width=body.clientWidth+"px" ;
 		canvas.style.height=body.clientHeight+"px" ;
 		
+		backgroundLayer.style.top = "0px";//(body.clientHeight / 2 - size / 2 + 10) + "px";
+		backgroundLayer.style.left = "0px";//(body.clientWidth / 2 - size / 2 + 10) + "px";
+		backgroundLayer.style.width=body.clientWidth+"px" ;
+		backgroundLayer.style.height=body.clientHeight+"px" ;
+	
+		window.addEventListener("resize", CanvasDrawing::onWindowResize, false);
+
+	
 		ctx = canvas.getContext(StringTypes._2d);
 		gui =new Gui(canvas);
 		
-		console.log("Loading gui " +gui);
+		//console.log("Loading gui " +gui);
 		
 		String demoxml="<dialog text=\"Find\" columns=\"3\" top=\"4\" left=\"4\" bottom=\"4\" right=\"4\" gap=\"4\">\r\n"
 				+ "	<label text=\"Find what:\" colspan=\"3\" />\r\n"
@@ -71,7 +83,7 @@ public class CanvasDrawing {
 			e.printStackTrace();
 		}
 		*/
-		console.log("Adding Dialog");
+		//console.log("Adding Dialog");
 		Object dlg=Gui.create("dialog");
 		console.log(dlg);
 		
@@ -119,10 +131,10 @@ public class CanvasDrawing {
 		gui.add(dlg,btn);
 		
 		gui.add(dlg);
-		console.log(gui.getDesktop());
+	//	console.log(gui.getDesktop());
 		
 		XMLHttpRequest client = new XMLHttpRequest();
-		client.open("GET", "demo.xml");
+		client.open("GET", "grapher.xml");
 		client.onloadend=(def.dom.ProgressEvent e)-> {
 			try {
 				String xml=client.responseText;
@@ -137,8 +149,21 @@ public class CanvasDrawing {
 			return null;
 		};
 		client.send();
-		
+		prevTime=window.performance.now();
 		draw();
+	}
+	
+
+
+	public static Object onWindowResize(Event event) {
+
+		gui.setViewPort((int)window.innerWidth , (int)window.innerHeight);
+		//.aspect = window.innerWidth / window.innerHeight;
+		//camera.updateProjectionMatrix();
+
+		//renderer.setSize(window.innerWidth, window.innerHeight);
+
+		return null;
 	}
 
 	private void draw() {
@@ -146,7 +171,7 @@ public class CanvasDrawing {
 
 		//ctx.fillStyle = union("rgb(" + (color >> 16 & 0xFF) + "," + (color >> 8 & 0xFF) + "," + (color & 0xFF) + ")");
 		//console.log(ctx.fillStyle, color + "opp" + Math.floor(angle / Math.PI * 2));
-
+/*
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		
 		ctx.beginPath();
@@ -160,10 +185,12 @@ public class CanvasDrawing {
 		}else {
 			//gui.render();
 		}
-		
+		*/
 		window.requestAnimationFrame((time) -> {
+			int dt=(int) (time-prevTime);
+			prevTime=time;
 			this.draw();
-			gui.updateUI((int) time, false);
+			gui.updateUI(dt, false);
 		});
 		
 		//console.log("gui drawing begins");

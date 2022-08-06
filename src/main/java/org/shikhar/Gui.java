@@ -10,12 +10,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.shikhar.Gui.CustomComponent;
+
 
 import def.dom.HTMLCanvasElement;
 
@@ -58,7 +61,7 @@ public class Gui   {
 	private  Color c_resizeborder;	
 	private  Color c_window_border;
 	private  Color c_ctrl;
-	private  Color col_gradient1, col_gradient2;
+	private  Color c_gradient1, c_gradient2;
 	private  Color c_overlay=new Color(0,0,0,50);
 	/**Size of block in pixels*/
 	private  int block=12;
@@ -158,9 +161,9 @@ public class Gui   {
 		this.input=new Input(this,component);
 
 		activeTimer=new GuiTimer();
-		
+		activeTimer.setCallback(this);
 		setDefaultFont(new Font("15px Arial",g.context));
-		setColors(DEFAULT_THEME);
+		setColors(SANDSTONE_THEME);
 		reset();
 	}
 	
@@ -343,8 +346,8 @@ public class Gui   {
 		float a1 = (c_bg.a+1)/2;
 		float a2 = (c_press.a+1)/2;
 		
-		col_gradient1=new Color(c_bg.r,c_bg.g,c_bg.b,(c_bg.a+1)/2);
-		col_gradient2=new Color(c_press.r,c_press.g,c_press.b,(c_press.a+1)/2);
+		c_gradient1=new Color(c_bg.r,c_bg.g,c_bg.b,(c_bg.a+1)/2);
+		c_gradient2=new Color(c_press.r,c_press.g,c_press.b,(c_press.a+1)/2);
 
 		c_icon_tint=new Color(iconTintColor);
 		c_shadow=c_press.darker();  
@@ -550,14 +553,24 @@ public class Gui   {
 	public boolean render() {
 			
 		
-		if(repaintNeeded||true){
+		if(repaintNeeded ||true){
 			repaintNeeded=false;
 			g.setFont(font);
-			g.begin(width,height);
+			g.begin(width,height,true);
 			paint();
 			g.end();
 			//return true;
+		}else {
+			//For offscreen rendering we need to render widgets which are updated regularly on default buffer
+			g.setFont(font);
+			g.begin(width,height,false);
+			for (CustomComponent bean : beans) {
+				renderComp(bean);
+			}
+			g.end();
 		}
+		
+		//return false;
 		/*
 		//Now update gui widget
 		if(useFBO && contextCreated){
@@ -664,7 +677,8 @@ public class Gui   {
     public boolean handleInput() {
     	boolean handled=false;
     	//handled=input.pollInput(this);
-    	if(handled)repaint(g);
+    	//if(handled)
+    		repaint(g);
         if(popupowner!=null || insidepart=="modal" || (mousepressed!=null && !getComponentClass(mousepressed).equals("desktop"))){
         	 if(insidepart=="modal") {/// && (input.mouse.wasClicked(AWTMouseEvent.BUTTON1)||input.mouse.wasClicked(AWTMouseEvent.BUTTON2)||input.mouse.wasClicked(AWTMouseEvent.BUTTON3))){
         		 //if(org.shikhar.simphy.Simphy.DEBUG )System.out.println(mousepressed);
@@ -1978,6 +1992,7 @@ public void onTimerTick(GuiTimer timer){
 		String text = null;
 		tooltipowner = null;
 		String classname = getComponentClass(mouseinside);
+		//console.log("Tool tip shown for "+classname);
 		if ((classname == "tabbedpane") || (classname == "menubar")
 				|| (classname == ":popup")) {
 			if (insidepart != null) {
@@ -2711,13 +2726,13 @@ public void onTimerTick(GuiTimer timer){
 			boolean selected = getBoolean(component, "selected", false);
 			String group = getString(component, "group", null);
 			Color border = enabled ? c_border : c_disable;
-			//Color background = enabled ? ((inside != pressed) ? c_hover :
-			//	(pressed ? c_press : c_ctrl)) :  (Color) get(component, "background");
-			Color background = (inside != pressed) ? c_hover :(Color) get(component, "background");
-			
-			//Color background = (Color) get(component, "background"); 
-			if (background==null)background= c_bg;
-			
+			Color background = (Color) get(component, "background"); 
+			if(background==null) {
+				background= (inside != pressed) ? c_hover :(pressed ? c_press : background);
+			}else {
+				background = (inside != pressed) ? c_hover :background;
+				
+			}		
 			Color foreground = (Color) get(component, "foreground");
 			if (foreground==null)foreground= c_text_fg;
 			
@@ -3154,10 +3169,22 @@ public void onTimerTick(GuiTimer timer){
 					height - (horizontal ? barSizeBy2*2 : (block + length)),
 					enabled ? c_border : c_disable,
 					c_hover, horizontal, !horizontal, true, true, true);
-				paintRect(horizontal ? length : 0, horizontal ? bounds.height-height  : length,
-					horizontal ? block : width, horizontal ? height : block,
-								enabled ? c_border : c_disable,
-										(inside != pressed && enabled) ?   c_hover : c_bg, true, true, true, true, true);
+				if(pressed ||inside) {
+					paintRect(horizontal ? length : 0, horizontal ? bounds.height-height  : length,
+							horizontal ? block : width, horizontal ? height : block,
+										enabled ? c_border : c_disable,
+												(inside && ! pressed && enabled) ?   c_gradient1 : c_gradient2, true, true, true, true, true);
+					
+				}else {
+					fill(horizontal ? length : 0, horizontal ? bounds.height-height  : length,
+							horizontal ? block : width, horizontal ? height : block,true,null);
+						g.setColor(c_border);
+						g.drawRect(horizontal ? length : 0, horizontal ? bounds.height-height  : length,
+							horizontal ? block : width, horizontal ? height: block );
+						
+				}
+				//g.drawVGradient(gr, foreground, maximum, barSizeBy2, width, height)
+				
 				if (focus) {
 					drawFocus(0, 0, bounds.width , bounds.height );
 				}
@@ -3889,8 +3916,8 @@ public void onTimerTick(GuiTimer timer){
 	 * Fill the given rectangle with gradient
 	 */
 	private void fill( int x, int y, int width, int height, boolean horizontal,Color color) {
-		Color c1=col_gradient1;
-		Color c2=col_gradient2;
+		Color c1=c_gradient1;
+		Color c2=c_gradient2;
 		if(color!=null){
 			c1=color;//.brighter();
 			c2=color.darker();
@@ -4500,7 +4527,7 @@ public void onTimerTick(GuiTimer timer){
 						: focusowner, shiftdown, controldown, modifiers,
 						control ? 0 : keychar, tempKeyCode)) {
 			consumed = true;
-		} else if ((tempKeyCode == AWTKeyEvent.VK_TAB)
+		} else if ((id == AWTKeyEvent.KEY_PRESSED)&&(tempKeyCode == AWTKeyEvent.VK_TAB)
 				|| ((tempKeyCode == AWTKeyEvent.VK_F6) && (altdown || controldown))) {
 			boolean outgo = true;// (keycode == AWTKeyEvent.VK_F6);
 			if (!shiftdown ? setNextFocusable(focusowner, outgo)
@@ -4530,7 +4557,17 @@ public void onTimerTick(GuiTimer timer){
 		//	CustomComponent bean = (CustomComponent) get(focusowner, ");
 		//	bean.handleKey(keychar, keycode,AWTKeyEvent.KEY_TYPED, shiftdown, controldown, modifiers);
 		//}
-
+		if (id == AWTKeyEvent.KEY_RELEASED && keycode==AWTKeyEvent.VK_SPACE && mousepressed!=null){
+			if(getComponentClass(mousepressed)=="button") {
+				invoke(mousepressed, null, "action");
+				mousepressed=null;
+			}else if(getComponentClass(mousepressed)=="checkbox") {
+				changeCheck(mousepressed, true);
+				mousepressed=null;
+			}
+			
+		}
+			
 		return consumed;
 	}
 	
@@ -4620,14 +4657,15 @@ public void onTimerTick(GuiTimer timer){
 							"type") == "default"))
 					|| ((keycode == AWTKeyEvent.VK_ESCAPE) && // ...
 					(get(component, "type") == "cancel"))) {
-				// pressedkey = keychar;
-				invoke(component, null, "action");
+				mousepressed =component;
+				//invoke(component, null, "action");  //Will be invoked on keyrelease
 				repaint(component);
 				return true;
 			}
 		} else if (("checkbox" == classname) || ("togglebutton" == classname)) {
 			if (keychar == AWTKeyEvent.VK_SPACE) {
-				changeCheck(component, true);
+				//changeCheck(component, true);  //Will be invoked on keyrelease
+				mousepressed =component;
 				repaint(component);
 				return true;
 			}
@@ -5708,7 +5746,7 @@ public void onTimerTick(GuiTimer timer){
 						set(header, ":resizing", null);
 					else if (id == AWTMouseEvent.MOUSE_ENTERED)
 						setCursor(Cursor
-								.getPredefinedCursor(Cursor.E_RESIZE_CURSOR));
+								.getPredefinedCursor(Cursor.COL_RESIZE_CURSOR));
 				}
 			}
 			if (header != null && get(header, ":resizecomponent") == null) {
@@ -5855,10 +5893,10 @@ public void onTimerTick(GuiTimer timer){
 				if (id == AWTMouseEvent.MOUSE_PRESSED) {
 					setFocus(component);
 				}
-				if (("button" == classname)
-						&& ((mousepressed == null) || (mousepressed == component))
-						&& ((id == AWTMouseEvent.MOUSE_ENTERED) || (id == AWTMouseEvent.MOUSE_EXITED))
-						&& (get(component, "type") == "link")) {
+				if (//("button" == classname)&&
+						 ((mousepressed == null) || (mousepressed == component))
+						&& ((id == AWTMouseEvent.MOUSE_ENTERED) || (id == AWTMouseEvent.MOUSE_EXITED))){
+						//&& (get(component, "type") == "link")) {
 					setCursor(Cursor
 							.getPredefinedCursor((id == AWTMouseEvent.MOUSE_ENTERED) ? Cursor.HAND_CURSOR
 									: Cursor.DEFAULT_CURSOR));
@@ -5940,17 +5978,18 @@ public void onTimerTick(GuiTimer timer){
 					("passwordfield" == classname), 0);
 		} else if ("textarea" == classname) {
 			if(clickcount>0){
-				//if(org.shikhar.simphy.Simphy.DEBUG )System.out.println("click count="+clickcount);
+				console.log("text area click count="+clickcount);
 			   processField(x, y, clickcount, id, component, true, false, 0);
-			}
+			}else {
 
 			if (!processScroll(x, y, id, component, part,false)) {//input.mouse.activeFingerCount>0)) {
 				//if(input.mouse.activeFingerCount==0)
 					processField(x, y, clickcount, id, component, true, false, 0);
 			}
+			}
 		} else if ("panel" == classname) {
 			if (id == AWTMouseEvent.MOUSE_PRESSED) setFocus(component);
-			//processScroll(x, y, id, component, part,input.mouse.activeFingerCount>0);
+			processScroll(x, y, id, component, part,false);//input.mouse.activeFingerCount>0);
 		} else if ("desktop" == classname) {
 			if (part == "modal") {
 				if (id == AWTMouseEvent.MOUSE_ENTERED) {
@@ -6011,6 +6050,11 @@ public void onTimerTick(GuiTimer timer){
 				}
 			}
 		} else if ("slider" == classname) {
+			if (id == AWTMouseEvent.MOUSE_ENTERED) {
+				setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			} else if (id == AWTMouseEvent.MOUSE_EXITED) {
+				setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			}
 			if (button==AWTMouseEvent.BUTTON1 &&((id == AWTMouseEvent.MOUSE_PRESSED)
 					|| (id == AWTMouseEvent.MOUSE_DRAGGED))) {
 				if (id == AWTMouseEvent.MOUSE_PRESSED) {
@@ -6061,8 +6105,8 @@ public void onTimerTick(GuiTimer timer){
 				boolean horizontal = ("vertical" != get(component,
 						"orientation"));
 				setCursor(Cursor
-						.getPredefinedCursor(horizontal ? Cursor.E_RESIZE_CURSOR
-								: Cursor.S_RESIZE_CURSOR));
+						.getPredefinedCursor(horizontal ? Cursor.COL_RESIZE_CURSOR
+								: Cursor.ROW_RESIZE_CURSOR));
 			} else if (((id == AWTMouseEvent.MOUSE_EXITED) && (mousepressed == null))
 					|| ((id == AWTMouseEvent.MOUSE_RELEASED) && (mouseinside != component))) {
 				setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -6767,12 +6811,13 @@ public void onTimerTick(GuiTimer timer){
 	 *
 	 */
 	private void invokeImpl(Object method, Object part) {
+		/**
 		if (method == null)
 			return;
 		Object[] data = (Object[]) method;
 		if (data[1] == null)
 			return;
-		boolean script =false;//!(data[1] instanceof Method);
+		boolean script =!(data[1] instanceof Method);
 		Object[] args = (data.length > 2) ? new Object[(data.length - 2) / 3] : null;
 		if (args != null)
 			for (int i = 0; i < args.length; i++) {
@@ -6788,8 +6833,7 @@ public void onTimerTick(GuiTimer timer){
 					Object parametername = data[2 + 3 * i + 1];
 					if (parametername == null) {
 						args[i] = target;
-						//if(script)args[i]=Widgets.getWrappedWidget(args[i]);
-						// args[i] = new Widget(this, target);
+						if(script)args[i]=Widgets.getWrappedWidget(args[i]);
 					} else {
 						args[i] = (target != null) ? get(target, parametername) : null;
 						if (args[i] == null) {
@@ -6801,14 +6845,17 @@ public void onTimerTick(GuiTimer timer){
 		try {
 			if (data[1] == null)
 				return;
-			//if (data[1] instanceof Method) {
-			//	((Method) data[1]).invoke(data[0], args);
-			//} else {
-				//ScriptManager.runEventFunction((String) data[1], args);
-			//}
+			if (data[1] instanceof Method) {
+				((Method) data[1]).invoke(data[0], args);
+			} else {
+				ScriptManager.runEventFunction((String) data[1], args);
+			}
+		} catch (InvocationTargetException ite) {
+			handleException(ite.getTargetException());
 		} catch (Throwable throwable) {
 			handleException(throwable);
 		}
+		*/
 	}
 
 	/**
@@ -8895,9 +8942,9 @@ public void onTimerTick(GuiTimer timer){
 			setKeystrokeImpl(component, key, value);
 		} else if ("bean" == definition[0]) {
 			if(value.equals("org.shikhar.simphy.gui.CanvasBean")||value.equals("org.shikhar.simphy.scripting.canvas.Canvas2D")||value.equals("org.shikhar.simphy.scripting.canvas.Canvas"))value="org.shikhar.simphy.gfx.canvas.Canvas";
-			/*
+			
 			try {
-				Object beanObject = Class.forName(value).newInstance();
+				Object beanObject = new Canvas();//Class.forName(value).newInstance();
 				if (beanObject instanceof CustomComponent) {
 					CustomComponent bean = (CustomComponent) beanObject;
 					bean.setGui(this);
@@ -8912,7 +8959,7 @@ public void onTimerTick(GuiTimer timer){
 				exc.printStackTrace();
 				throw new IllegalArgumentException(exc.getMessage()+value);
 			}
-			*/
+			
 			
 		} else
 			throw new IllegalArgumentException((String) definition[0]);
@@ -9433,10 +9480,10 @@ public void onTimerTick(GuiTimer timer){
 					else throw new IllegalArgumentException(parentclass + " has no item");
 				}
 				else if ("this".equals(compname)) {
-					comp = component; classname = getClass(comp);
+					comp = component; classname = getComponentClass(comp);
 				}
 				else if ((comp = find(root, compname)) != null) { // a widget's name
-					classname = getClass(comp);
+					classname = getComponentClass(comp);
 				}
 				else {
 					try { // maybe constant number
@@ -9491,7 +9538,7 @@ public void onTimerTick(GuiTimer timer){
 						parametertypes[i] = Double.TYPE;
 					}
 					else if (fieldclass == "icon") {
-						parametertypes[i] = Image.class;
+						parametertypes[i] = AWTImage.class;
 					}
 					else throw new IllegalArgumentException((String) fieldclass);
 				}
@@ -9510,6 +9557,7 @@ public void onTimerTick(GuiTimer timer){
 		data[0]=value;
 		data[1] = methodname;
 		return  data;
+		*
 		*/
 		return null;
 	}
